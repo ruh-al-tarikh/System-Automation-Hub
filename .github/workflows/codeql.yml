@@ -1,0 +1,58 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday at midnight
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript-typescript' ] # For node-based scripts in bin/
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-and-quality
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+
+  analyze-powershell:
+    name: PowerShell Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run PSScriptAnalyzer (Security Only)
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          \$results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning | Where-Object { \$_.RuleName -like "*Security*" }
+          if (\$results) {
+              \$results | Format-Table
+              Write-Host "::notice title=Security Scan::Potential security issues found in PowerShell scripts."
+              # Note: We might not want to fail the build on all warnings, but security is priority.
+          } else {
+              Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
+          }
