@@ -40,6 +40,7 @@ jobs:
       - name: Run PSScriptAnalyzer
         shell: pwsh
         run: |
+<<<<<<< HEAD
           \$results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
           if (\$results) {
               \$results | Format-Table
@@ -74,4 +75,10 @@ jobs:
           } else {
               Write-Host "::notice title=Testing::No tests found in ./tests directory."
               throw "Tests not found."
+=======
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
+          if ($results) {
+            $results | Format-Table
+            throw "PSScriptAnalyzer found issues"
+>>>>>>> origin/remote-control-bridge-12936344523257638862
           }

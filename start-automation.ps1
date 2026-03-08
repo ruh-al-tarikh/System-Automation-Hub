@@ -1,6 +1,9 @@
-# =============================================
+﻿# =============================================
 # System Automation Hub Launcher
 # =============================================
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "")]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseShouldProcessForStateChangingFunctions", "")]
+param()
 
 # --- Config ---
 $port = 9000
