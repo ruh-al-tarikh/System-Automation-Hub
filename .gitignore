@@ -23,3 +23,26 @@ __pycache__/
 *.pem
 *.token
 gh-/
+
+# GitHub runner artifacts
+.runner
+.runner.spec
+bin/
+build/
+dist/
+externals/
+
+# runner scripts
+run-helper.cmd
+run-helper.cmd.template
+run-helper.sh.template
+run.cmd
+config.cmd
+
+# python
+venv/
+__pycache__/
+*.pyc
+
+# logs
+logs/
