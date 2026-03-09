@@ -13,6 +13,7 @@ __pycache__/
 
 # Logs
 *.log
+logs/
 
 # IDE
 .vscode/
@@ -22,7 +23,7 @@ __pycache__/
 *.key
 *.pem
 *.token
-gh-/
+gh-*/
 
 # GitHub runner artifacts
 .runner
@@ -31,6 +32,10 @@ bin/
 build/
 dist/
 externals/
+
+# Allow specific script inside bin
+!bin/checkScripts/
+!bin/checkScripts/runDownloadCert.js
 
 # runner scripts
 run-helper.cmd
@@ -43,6 +48,3 @@ config.cmd
 venv/
 __pycache__/
 *.pyc
-
-# logs
-logs/
