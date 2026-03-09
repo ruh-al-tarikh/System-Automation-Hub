@@ -1,18 +1,14 @@
-# Path to workflows folder
 $workflowDir = ".github\workflows"
 
-# Ensure the folder exists
+# Ensure folder exists
 if (-not (Test-Path $workflowDir)) {
     New-Item -ItemType Directory -Path $workflowDir -Force
     Write-Host "Created folder $workflowDir"
-} else {
-    Write-Host "$workflowDir already exists."
 }
 
-# Path to the PowerShell CI workflow
 $ciFile = "$workflowDir\powershell-ci.yml"
 
-# Prompt if file exists
+# Prompt before overwriting
 if (Test-Path $ciFile) {
     $answer = Read-Host "$ciFile already exists. Overwrite? (Y/N)"
     if ($answer -ne 'Y') {
@@ -21,8 +17,8 @@ if (Test-Path $ciFile) {
     }
 }
 
-# Content of powershell-ci.yml
-@"
+# YAML content
+$yaml = @"
 name: PowerShell CI
 
 on:
@@ -85,6 +81,8 @@ jobs:
           } else {
               Write-Host "No tests found in ./tests"
           }
-"@ | Set-Content -Path $ciFile -Force
+"@
 
+# Write YAML to file
+$yaml | Set-Content -Path $ciFile -Force
 Write-Host "$ciFile created successfully."
