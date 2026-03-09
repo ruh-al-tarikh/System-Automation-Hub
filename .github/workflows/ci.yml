@@ -19,17 +19,18 @@ jobs:
       - name: Check for UTF-8 BOM
         shell: pwsh
         run: |
-          \$invalidFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1,*.psd1 -Recurse | Where-Object {
-              # Check for UTF-8 BOM (0xEF, 0xBB, 0xBF)
-              \$bytes = Get-Content -Path \$_.FullName -AsByteStream -TotalCount 3
-              -not (\$bytes[0] -eq 0xEF -and \$bytes[1] -eq 0xBB -and \$bytes[2] -eq 0xBF)
+          $invalidFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1,*.psd1 -Recurse | Where-Object {
+              $bytes = Get-Content -Path $_.FullName -AsByteStream -TotalCount 3
+              -not ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)
           }
-          if (\$invalidFiles) {
-              foreach (\$file in \$invalidFiles) {
-                  Write-Error "File '\$(\$file.FullName)' is not encoded in UTF-8 BOM."
+
+          if ($invalidFiles) {
+              foreach ($file in $invalidFiles) {
+                  Write-Error "File '$($file.FullName)' is not encoded in UTF-8 BOM."
               }
               throw "Invalid file encoding found. All .ps1 files must be UTF-8 BOM."
           }
+
           Write-Host "::notice title=Style Check::All PowerShell files are correctly encoded in UTF-8 BOM."
 
       - name: Install PSScriptAnalyzer
@@ -40,10 +41,9 @@ jobs:
       - name: Run PSScriptAnalyzer
         shell: pwsh
         run: |
-<<<<<<< HEAD
-          \$results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
-          if (\$results) {
-              \$results | Format-Table
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
+          if ($results) {
+              $results | Format-Table
               Write-Host "::notice title=Linting::PSScriptAnalyzer found issues."
               throw "PSScriptAnalyzer found issues"
           }
@@ -53,6 +53,7 @@ jobs:
     name: Pester Tests
     runs-on: ubuntu-latest
     needs: lint
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -66,19 +67,15 @@ jobs:
         shell: pwsh
         run: |
           Import-Module Pester
+
           if (Test-Path ./tests) {
-              \$config = New-PesterConfiguration
-              \$config.Run.Path = "./tests"
-              \$config.Run.Exit = \$true
-              \$config.Output.Verbosity = 'Detailed'
-              Invoke-Pester -Configuration \$config
-          } else {
+              $config = New-PesterConfiguration
+              $config.Run.Path = "./tests"
+              $config.Run.Exit = $true
+              $config.Output.Verbosity = 'Detailed'
+              Invoke-Pester -Configuration $config
+          }
+          else {
               Write-Host "::notice title=Testing::No tests found in ./tests directory."
               throw "Tests not found."
-=======
-          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
-          if ($results) {
-            $results | Format-Table
-            throw "PSScriptAnalyzer found issues"
->>>>>>> origin/remote-control-bridge-12936344523257638862
           }
