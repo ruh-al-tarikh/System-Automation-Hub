@@ -1,0 +1,29 @@
+name: Download TLS Certificate
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Download TLS Certificate
+        shell: pwsh
+        run: |
+          $certPath = ".\bin\checkScripts\download_ca_cert.pem"
+          if (Test-Path $certPath) {
+              $timestamp = Get-Date -Format yyyyMMddHHmmss
+              Rename-Item $certPath "$certPath.$timestamp.bak"
+              Write-Host "Existing certificate backed up."
+          }
+          node .\bin\checkScripts\runDownloadCert.js github.com
