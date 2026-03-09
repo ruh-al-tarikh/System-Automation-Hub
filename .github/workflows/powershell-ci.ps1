@@ -1,0 +1,93 @@
+# Path to the workflows folder
+$workflowDir = ".github\workflows"
+
+# Ensure folder exists
+if (-not (Test-Path $workflowDir)) {
+    New-Item -ItemType Directory -Path $workflowDir -Force
+    Write-Host "Created folder $workflowDir"
+}
+
+# Path to the YAML workflow file
+$ciFile = "$workflowDir\powershell-ci.yml"
+
+# Prompt before overwriting existing workflow
+if (Test-Path $ciFile) {
+    $answer = Read-Host "$ciFile already exists. Overwrite? (Y/N)"
+    if ($answer -ne 'Y') {
+        Write-Host "Skipped creating $ciFile"
+        return
+    } else {
+        Write-Host "Overwriting existing $ciFile"
+    }
+}
+
+# YAML content for PowerShell CI workflow
+$yaml = @"
+name: PowerShell CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: windows-latest
+    env:
+      HOSTNAME: github.com
+      OUTPUT_CERT: \${{ github.workspace }}\bin\checkScripts\download_ca_cert.pem
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Download TLS certificate
+        shell: pwsh
+        run: |
+          \$certPath = "\${{ env.OUTPUT_CERT }}"
+          if (Test-Path \$certPath) {
+              \$timestamp = Get-Date -Format yyyyMMddHHmmss
+              Rename-Item \$certPath "\$certPath.\$timestamp.bak"
+              Write-Host "Existing certificate backed up."
+          }
+          node .\bin\checkScripts\runDownloadCert.js \$env:HOSTNAME
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          \$results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
+          if (\$results) {
+              \$results | Format-Table
+              throw "PSScriptAnalyzer found issues."
+          }
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module Pester -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Run Pester Tests
+        shell: pwsh
+        run: |
+          if (Test-Path ./tests) {
+              Import-Module Pester
+              Invoke-Pester -Path ./tests -Verbose
+          } else {
+              Write-Host "No tests found in ./tests"
+          }
+"@
+
+# Write YAML to file
+$yaml | Set-Content -Path $ciFile -Force
+
+Write-Host "$ciFile created successfully."
