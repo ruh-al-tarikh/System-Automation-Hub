@@ -15,7 +15,7 @@ on:
 jobs:
 
   analyze:
-    name: CodeQL JavaScript/TypeScript Scan
+    name: CodeQL Security Scan
     runs-on: ubuntu-latest
 
     permissions:
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript-typescript']
+        language: ['javascript-typescript', 'python']
 
     timeout-minutes: 30
 
@@ -70,25 +70,15 @@ jobs:
       - name: Run PowerShell Security Scan
         shell: pwsh
         run: |
-          # Find PowerShell files and convert to string paths
-          $psFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1 -Recurse -File |
-                     Select-Object -ExpandProperty FullName
+          # Run PSScriptAnalyzer recursively on the repository
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning |
+                     Where-Object { $_.RuleName -like "*Security*" }
 
-          if ($psFiles) {
-
-              $results = Invoke-ScriptAnalyzer -Path $psFiles -Severity Error,Warning |
-                         Where-Object { $_.RuleName -like "*Security*" }
-
-              if ($results) {
-                  $results | Format-Table
-                  Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
-                  throw "Security issues detected by PSScriptAnalyzer"
-              }
-              else {
-                  Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
-              }
-
+          if ($results) {
+              $results | Format-Table
+              Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
+              throw "Security issues detected by PSScriptAnalyzer"
           }
           else {
-              Write-Host "::notice title=Security Scan::No PowerShell files found."
+              Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
           }
