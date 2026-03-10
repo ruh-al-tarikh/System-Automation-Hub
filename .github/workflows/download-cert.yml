@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
@@ -29,3 +29,9 @@ jobs:
               Write-Host "Existing certificate backed up."
           }
           node .\bin\checkScripts\runDownloadCert.js github.com
+          if (Test-Path $certPath) {
+              Write-Host "::notice title=Download TLS Certificate [Run #$($env:GITHUB_RUN_NUMBER)]::Certificate downloaded and verified successfully."
+          } else {
+              Write-Host "::error title=Download TLS Certificate [Run #$($env:GITHUB_RUN_NUMBER)]::Failed to download certificate."
+              throw "Failed to download certificate."
+          }

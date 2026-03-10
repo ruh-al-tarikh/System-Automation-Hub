@@ -3,17 +3,13 @@ name: CodeQL Analysis
 on:
   push:
     branches: [main]
-
   pull_request:
     branches: [main]
-
   schedule:
-    - cron: '0 0 * * 1' # Every Monday at midnight
-
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 jobs:
-
   analyze:
     name: CodeQL Security Scan
     runs-on: ubuntu-latest
@@ -44,41 +40,3 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: ${{ matrix.language }}
-
-
-  analyze-powershell:
-    name: PowerShell Security Scan
-    runs-on: ubuntu-latest
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install PSScriptAnalyzer
-        shell: pwsh
-        run: |
-          Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-
-      - name: Run PowerShell Security Scan
-        shell: pwsh
-        run: |
-          # Run PSScriptAnalyzer recursively on the repository
-          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning |
-                     Where-Object { $_.RuleName -like "*Security*" }
-
-          if ($results) {
-              $results | Format-Table
-              Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
-              throw "Security issues detected by PSScriptAnalyzer"
-          }
-          else {
-              Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
-          }

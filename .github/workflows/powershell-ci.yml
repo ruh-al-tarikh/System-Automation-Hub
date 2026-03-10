@@ -1,4 +1,4 @@
-name: PowerShell Security Scan
+name: PowerShell CI
 
 on:
   push:
@@ -8,19 +8,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  security-scan:
-    runs-on: windows-latest
+  powershell-ci:
+    name: PowerShell CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install PSScriptAnalyzer
+      - name: Set up PowerShell
+        if: runner.os != 'Windows'
+        uses: microsoft/setup-powershell@v3
+
+      - name: Install Modules
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          Install-Module Pester -Force -Scope CurrentUser -SkipPublisherCheck
 
-      - name: Run Security Scan
+      - name: Run PSScriptAnalyzer (Security Scan)
         shell: pwsh
         run: |
           $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning |
@@ -28,8 +39,23 @@ jobs:
 
           if ($results) {
               $results | Format-Table
-              Write-Host "::error title=Security Scan::Potential security issues found."
+              Write-Host "::error title=Security Scan [Run #$($env:GITHUB_RUN_NUMBER)]::Potential security issues found in PowerShell scripts."
               throw "Security issues detected by PSScriptAnalyzer"
           } else {
-              Write-Host "::notice title=Security Scan::No common security issues found."
+              Write-Host "::notice title=Security Scan [Run #$($env:GITHUB_RUN_NUMBER)]::No common security issues found."
+          }
+
+      - name: Run Pester Tests
+        shell: pwsh
+        run: |
+          if (Test-Path ./tests) {
+              $results = Invoke-Pester -Path ./tests -PassThru
+              if ($results.FailedCount -gt 0) {
+                  Write-Host "::error title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::$($results.FailedCount) tests failed."
+                  throw "Pester tests failed."
+              } else {
+                  Write-Host "::notice title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::All tests passed successfully."
+              }
+          } else {
+              Write-Host "::notice title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::No Pester tests found in ./tests."
           }
