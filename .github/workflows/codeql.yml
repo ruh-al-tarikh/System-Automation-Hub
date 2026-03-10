@@ -1,26 +1,33 @@
-name: "CodeQL Analysis"
+name: CodeQL Analysis
 
 on:
   push:
     branches: [main]
+
   pull_request:
     branches: [main]
+
   schedule:
     - cron: '0 0 * * 1' # Every Monday at midnight
+
   workflow_dispatch:
 
 jobs:
+
   analyze:
     name: CodeQL JavaScript/TypeScript Scan
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
       security-events: write
+
     strategy:
       fail-fast: false
       matrix:
         language: ['javascript-typescript']
+
     timeout-minutes: 30
 
     steps:
@@ -38,13 +45,16 @@ jobs:
         with:
           category: ${{ matrix.language }}
 
+
   analyze-powershell:
     name: PowerShell Security Scan
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
       security-events: write
+
     timeout-minutes: 20
 
     steps:
@@ -53,20 +63,32 @@ jobs:
 
       - name: Install PSScriptAnalyzer
         shell: pwsh
-        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
 
       - name: Run PowerShell Security Scan
         shell: pwsh
         run: |
-          # Adjust folder path if needed, e.g., .\bin or .\src
-          $psFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1 -Recurse
-          $results = Invoke-ScriptAnalyzer -Path $psFiles -Recurse -Severity Error,Warning |
-                     Where-Object { $_.RuleName -like "*Security*" }
+          # Find PowerShell files and convert to string paths
+          $psFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1 -Recurse -File |
+                     Select-Object -ExpandProperty FullName
 
-          if ($results) {
-              $results | Format-Table
-              Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
-              throw "Security issues detected by PSScriptAnalyzer"
-          } else {
-              Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
+          if ($psFiles) {
+
+              $results = Invoke-ScriptAnalyzer -Path $psFiles -Severity Error,Warning |
+                         Where-Object { $_.RuleName -like "*Security*" }
+
+              if ($results) {
+                  $results | Format-Table
+                  Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
+                  throw "Security issues detected by PSScriptAnalyzer"
+              }
+              else {
+                  Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
+              }
+
+          }
+          else {
+              Write-Host "::notice title=Security Scan::No PowerShell files found."
           }
