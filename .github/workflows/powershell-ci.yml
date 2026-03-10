@@ -20,10 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up PowerShell
-        if: runner.os != 'Windows'
-        uses: microsoft/setup-powershell@v3
-
       - name: Install Modules
         shell: pwsh
         run: |
