@@ -1,24 +1,60 @@
-- name: PowerShell Security Scan
-  shell: pwsh
-  run: |
-    $psFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1 -Recurse -File |
-               Select-Object -ExpandProperty FullName
+name: Continuous Integration
 
-    if ($psFiles) {
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
-        $results = Invoke-ScriptAnalyzer -Path $psFiles -Severity Error,Warning |
-                   Where-Object { $_.RuleName -like "*Security*" }
+jobs:
+  pester-test:
+    name: Run Pester Tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        if ($results) {
-            $results | Format-Table
-            Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
-            throw "Security issues detected by PSScriptAnalyzer"
-        }
-        else {
-            Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
-        }
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          $results = Invoke-Pester -Path ./tests/Project.Tests.ps1 -PassThru
+          if ($results.FailedCount -gt 0) {
+              throw "Pester tests failed with $($results.FailedCount) errors."
+          }
 
-    }
-    else {
-        Write-Host "::notice title=Security Scan::No PowerShell files found."
-    }
+  security-scan:
+    name: PowerShell Security Scan
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PowerShell Security Scan
+        shell: pwsh
+        run: |
+          $psFiles = Get-ChildItem -Path . -Include *.ps1,*.psm1 -Recurse -File |
+                     Select-Object -ExpandProperty FullName
+
+          if ($psFiles) {
+              $results = Invoke-ScriptAnalyzer -Path $psFiles -Severity Error,Warning |
+                         Where-Object { $_.RuleName -like "*Security*" }
+
+              if ($results) {
+                  $results | Format-Table
+                  Write-Host "::error title=Security Scan::Potential security issues found in PowerShell scripts."
+                  throw "Security issues detected by PSScriptAnalyzer"
+              }
+              else {
+                  Write-Host "::notice title=Security Scan::No common security issues found in PowerShell scripts."
+              }
+          }
+          else {
+              Write-Host "::notice title=Security Scan::No PowerShell files found."
+          }
