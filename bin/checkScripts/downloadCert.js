@@ -6,7 +6,7 @@ const net = require('net');
 
 async function downloadCert(host, port = 443, outputFile) {
     return new Promise((resolve, reject) => {
-        const socket = tls.connect(port, host, { rejectUnauthorized: false }, () => {
+        const socket = tls.connect(port, host, {}, () => {
             const cert = socket.getPeerCertificate();
             if (!cert || !cert.raw) {
                 return reject(new Error('Unable to retrieve certificate.'));
