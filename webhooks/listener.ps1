@@ -7,6 +7,10 @@ param()
 $port = 9000
 $endpoint = "http://localhost:$port/"
 
+# Performance: Pre-calculate encoding and response buffer to avoid redundant allocations in the loop
+$utf8 = [System.Text.Encoding]::UTF8
+$responseBytes = $utf8.GetBytes("System Automation Hub: Event Received")
+
 # Ensure we don't try to start another listener if one is already running in this session
 if ($null -ne $listener) {
     try { $listener.Stop() } catch { Write-Verbose "Listener already stopped." }
@@ -29,7 +33,8 @@ try {
         $request = $context.Request
         $response = $context.Response
 
-        $timestamp = Get-Date -Format 'HH:mm:ss'
+        # Performance: Use .NET [DateTime]::Now for faster timestamp generation than Get-Date cmdlet
+        $timestamp = [DateTime]::Now.ToString('HH:mm:ss')
         $method = $request.HttpMethod
         $remote = $request.RemoteEndPoint
         $userAgent = $request.UserAgent
@@ -37,21 +42,34 @@ try {
 
         $sourceIcon = if ($isGitHub) { "🐙 GitHub " } else { "🔗 Web " }
 
+        # Read body if available
+        $body = $null
+        if ($request.HasEntityBody) {
+            # Performance: Use constructor directly and ensure proper disposal of the stream reader
+            $reader = [System.IO.StreamReader]::new($request.InputStream, $utf8)
+            $body = $reader.ReadToEnd()
+            $reader.Dispose()
+        }
+
+        # ⚡ BOLT OPTIMIZATION: Early Response
+        # We send the response IMMEDIATELY after reading the body to minimize latency for the sender (e.g. GitHub).
+        # Expensive operations like JSON pretty-printing and console logging happen AFTER the connection is closed.
+        $response.ContentLength64 = $responseBytes.Length
+        $response.OutputStream.Write($responseBytes, 0, $responseBytes.Length)
+        $response.Close()
+
         Write-Host "[$timestamp] " -ForegroundColor Gray -NoNewline
         Write-Host "$sourceIcon" -ForegroundColor Magenta -NoNewline
         Write-Host "$method " -ForegroundColor Yellow -NoNewline
         Write-Host "from " -ForegroundColor Gray -NoNewline
         Write-Host "$remote" -ForegroundColor White
 
-        # Read body if available
-        if ($request.HasEntityBody) {
-            $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
-            $body = $reader.ReadToEnd()
-
+        if ($null -ne $body) {
             try {
                 if ($request.ContentType -match "application/json") {
-                    $jsonObj = $body | ConvertFrom-Json
-                    $prettyBody = $jsonObj | ConvertTo-Json -Depth 10
+                    # Performance: Use -InputObject parameter instead of pipeline for faster processing
+                    $jsonObj = ConvertFrom-Json -InputObject $body
+                    $prettyBody = ConvertTo-Json -InputObject $jsonObj -Depth 10
                     Write-Host "Payload (JSON):" -ForegroundColor Cyan
                     Write-Host $prettyBody -ForegroundColor DarkGray
                 } else {
@@ -64,11 +82,6 @@ try {
             }
         }
 
-        # Simple response
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes("System Automation Hub: Event Received")
-        $response.ContentLength64 = $buffer.Length
-        $response.OutputStream.Write($buffer, 0, $buffer.Length)
-        $response.Close()
         Write-Host "Done.`n" -ForegroundColor DarkGray
     }
 } catch {
