@@ -1,4 +1,5 @@
-﻿# Files to remove (relative to repo root)
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
+# Files to remove (relative to repo root)
 $filesToDelete = @(
     ".github\workflows\create-powershell-ci.ps1",
     ".github\workflows\download-cert.yml",
@@ -7,9 +8,9 @@ $filesToDelete = @(
 
 foreach ($file in $filesToDelete) {
     # Expand wildcard if any
-    $matches = Get-ChildItem -Path $file -ErrorAction SilentlyContinue
-    if ($matches) {
-        foreach ($match in $matches) {
+    $foundFiles = Get-ChildItem -Path $file -ErrorAction SilentlyContinue
+    if ($foundFiles) {
+        foreach ($match in $foundFiles) {
             $answer = Read-Host "Do you want to delete '$($match.FullName)'? (Y/N)"
             if ($answer -eq 'Y') {
                 Remove-Item -Path $match.FullName -Force

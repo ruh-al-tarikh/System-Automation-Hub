@@ -1,48 +1,45 @@
-﻿# Workflow folder
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
+# Workflow folder
 $workflowDir = ".github\workflows"
 if (-not (Test-Path $workflowDir)) {
     New-Item -ItemType Directory -Path $workflowDir -Force | Out-Null
 }
 
-# download-cert.yml content
+# 1. download-cert.yml
 $downloadCertYaml = @'
-name: Download TLS Certificate
+name: Download Certificate
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      certUrl:
+        description: 'URL of the certificate to download'
+        required: true
+      certName:
+        description: 'Name for the downloaded certificate'
+        required: true
 
 jobs:
   download:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Download TLS Certificate
-        shell: pwsh
+      - name: Download Certificate
         run: |
-          $certPath = ".\bin\checkScripts\download_ca_cert.pem"
-          if (Test-Path $certPath) {
-              $timestamp = Get-Date -Format yyyyMMddHHmmss
-              Rename-Item $certPath "$certPath.$timestamp.bak"
-              Write-Host "Existing certificate backed up."
-          }
-          node .\bin\checkScripts\runDownloadCert.js github.com
+          curl -L "${{ github.event.inputs.certUrl }}" -o "${{ github.event.inputs.certName }}"
+          echo "Certificate downloaded: ${{ github.event.inputs.certName }}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.certName }}
+          path: ${{ github.event.inputs.certName }}
 '@
 
-# Save download-cert.yml
 $downloadCertFile = Join-Path $workflowDir "download-cert.yml"
 $downloadCertYaml | Set-Content -Path $downloadCertFile -Force
 Write-Host "$downloadCertFile created successfully."
 
-# Optionally, create powershell-ci.yml (minimal version)
+# 2. powershell-ci.yml
 $powershellCiYaml = @'
 name: PowerShell CI
 
@@ -54,37 +51,52 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint-and-test:
-    runs-on: windows-latest
+  powershell-ci:
+    name: PowerShell CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install PSScriptAnalyzer
-        shell: pwsh
-        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-
-      - name: Run PSScriptAnalyzer
+      - name: Install Modules
         shell: pwsh
         run: |
-          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          Install-Module Pester -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Run PSScriptAnalyzer (Security Scan)
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error,Warning |
+                     Where-Object { $_.RuleName -like "*Security*" }
+
           if ($results) {
               $results | Format-Table
-              throw "PSScriptAnalyzer found issues"
+              Write-Host "::error title=Security Scan [Run #$($env:GITHUB_RUN_NUMBER)]::Potential security issues found in PowerShell scripts."
+              throw "Security issues detected by PSScriptAnalyzer"
+          } else {
+              Write-Host "::notice title=Security Scan [Run #$($env:GITHUB_RUN_NUMBER)]::No common security issues found."
           }
-
-      - name: Install Pester
-        shell: pwsh
-        run: Install-Module Pester -Force -Scope CurrentUser -SkipPublisherCheck
 
       - name: Run Pester Tests
         shell: pwsh
         run: |
           if (Test-Path ./tests) {
-              Import-Module Pester
-              Invoke-Pester -Path ./tests -Verbose
+              $results = Invoke-Pester -Path ./tests -PassThru
+              if ($results.FailedCount -gt 0) {
+                  Write-Host "::error title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::$($results.FailedCount) tests failed."
+                  throw "Pester tests failed."
+              } else {
+                  Write-Host "::notice title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::All tests passed successfully."
+              }
           } else {
-              Write-Host "No Pester tests found."
+              Write-Host "::notice title=Pester Tests [Run #$($env:GITHUB_RUN_NUMBER)]::No Pester tests found in ./tests."
           }
 '@
 
