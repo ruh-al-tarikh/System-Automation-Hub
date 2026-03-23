@@ -1,38 +1,41 @@
-# ⚙️ System Automation Hub
+# ⚙️ 𝙎𝙮𝙨𝙩𝙚𝙢 𝘼𝙪𝙩𝙤𝙢𝙖𝙩𝙞𝙤𝙣 𝙃𝙪𝙗
 
-### 🚀 Your Event-Driven Machine Control Plane
+### 🚀 *Your Event-Driven Machine Control Plane*
 
-> **GitHub events aren’t notifications — they’re executable intent.**
-
----
-
-## 🌌 Overview
-
-**System Automation Hub** is a **local-first, event-driven control system** that transforms GitHub into a **secure command interface** for real machines.
-
-It listens.
-It verifies.
-It decides.
-It executes. ⚡
-
-No fluff. No abstractions hiding reality. Just **deterministic automation wired directly to your system**.
+> **「 GitHub events aren’t notifications — they’re executable intent. 」**
 
 ---
 
-## 🎯 Vision
+## 🌌 𝙊𝙫𝙚𝙧𝙫𝙞𝙚𝙬
+
+**System Automation Hub** is a **local-first, event-driven control system**
+that transforms GitHub into a **secure command interface for real machines**.
+
+```
+Listen → Verify → Decide → Execute ⚡
+```
+
+No fluff.
+No abstraction leaks.
+Just **deterministic automation wired directly into your system layer**.
+
+---
+
+## 🎯 𝙑𝙞𝙨𝙞𝙤𝙣
 
 > *Turn GitHub into a trusted, real-time control surface for local infrastructure.*
 
-This project is designed as **living infrastructure**, not a demo:
+This is not a demo.
+This is **living infrastructure**:
 
-* 🔐 Secure by design
-* ⚙️ Explicit execution paths
-* 🧠 Extensible control logic
-* 🧩 Modular growth
+* 🔐 **Security-first by default**
+* ⚙️ **Explicit execution paths**
+* 🧠 **Composable control logic**
+* 🧩 **Modular system growth**
 
 ---
 
-## 🧬 Core Architecture
+## 🧬 𝘾𝙤𝙧𝙚 𝘼𝙧𝙘𝙝𝙞𝙩𝙚𝙘𝙩𝙪𝙧𝙚
 
 ```mermaid
 flowchart LR
@@ -45,56 +48,66 @@ flowchart LR
 
 ---
 
-## 🧱 Core Principles
+## 🧱 𝘾𝙤𝙧𝙚 𝙋𝙧𝙞𝙣𝙘𝙞𝙥𝙡𝙚𝙨
 
-### 🟢 Local-First Execution
+### 🟢 **Local-First Execution**
 
-Automation runs where the hardware lives — no unnecessary cloud indirection.
-
-### 🟡 Event-Driven Everything
-
-Pushes, merges, labels, dispatches → **triggers**, not notifications.
-
-### 🔴 Security is Non-Negotiable
-
-* HMAC-SHA256 validation
-* Explicit trust boundaries
-* Zero blind execution
-
-### 🔵 Modular & Explicit
-
-* One responsibility per module
-* Clear inputs/outputs
-* No hidden magic
-
-### 🟣 Future-Ready
-
-Designed for:
-
-* Containers 🐳
-* GPUs ⚡
-* Orchestration systems 🧩
+> Runs where the metal lives — *zero unnecessary indirection*
 
 ---
 
-## 🧠 Current Capabilities
+### 🟡 **Event = Action**
 
-| Status | Feature                        | Description                               |
-| :----: | ------------------------------ | ----------------------------------------- |
-|    ✅   | 🔐 Secure Webhook Listener     | Validates GitHub signatures (HMAC-SHA256) |
-|    ✅   | ⚙️ PowerShell Execution Engine | Native Windows automation runtime         |
-|    ✅   | 🌐 Local HTTP Endpoint         | Dedicated localhost control interface     |
-|    ✅   | 🌍 Public Tunnel Support       | ngrok (Cloudflare / Tailscale planned)    |
-|    ✅   | 🔁 Event → Action Pipeline     | Push / merge / dispatch triggers          |
-|   🟡   | 🐳 Container Targets           | Docker / WSL execution expansion          |
-|   🟡   | 📊 Workflow Orchestration      | Prefect / structured pipelines            |
-|   🟡   | ⚡ GPU Task Queue               | ML / compute workload routing             |
-|   🟡   | 🤖 Self-hosted Actions Runner  | Repo controlling itself                   |
-|   🟡   | 🛡️ Policy Engine              | Rule-based execution control              |
+> Pushes, merges, labels → **not signals — commands**
 
 ---
 
-## ⚡ Example Flow
+### 🔴 **Security is Law**
+
+```
+✔ HMAC-SHA256 validation
+✔ Explicit trust boundaries
+✔ Zero blind execution
+```
+
+---
+
+### 🔵 **Modularity Over Magic**
+
+* One module → one responsibility
+* Inputs/outputs are explicit
+* No hidden behavior
+
+---
+
+### 🟣 **Future-Native Design**
+
+```
+Containers 🐳
+GPUs ⚡
+Orchestration 🧩
+```
+
+---
+
+## 🧠 𝘾𝙖𝙥𝙖𝙗𝙞𝙡𝙞𝙩𝙞𝙚𝙨
+
+| Status | Feature                        | Description                          |
+| :----: | ------------------------------ | ------------------------------------ |
+|    ✅   | 🔐 **Secure Webhook Listener** | HMAC-SHA256 validation               |
+|    ✅   | ⚙️ **PowerShell Engine**       | Native Windows execution runtime     |
+|    ✅   | 🌐 **Local Endpoint**          | Dedicated localhost control          |
+|    ✅   | 🌍 **Public Tunnel**           | ngrok (Cloudflare/Tailscale planned) |
+|    ✅   | 🔁 **Event → Action**          | GitHub-triggered automation          |
+|   🟡   | 🐳 **Containers**              | Docker / WSL expansion               |
+|   🟡   | 📊 **Orchestration**           | Prefect / workflow engine            |
+|   🟡   | ⚡ **GPU Queue**                | ML / compute routing                 |
+|   🟡   | 🤖 **Self-hosted Runner**      | Repo controls itself                 |
+|   🟡   | 🛡️ **Policy Engine**          | Rule-based execution                 |
+
+---
+
+## ⚡ 𝙀𝙭𝙚𝙘𝙪𝙩𝙞𝙤𝙣 𝙁𝙡𝙤𝙬
 
 ```mermaid
 sequenceDiagram
@@ -102,59 +115,61 @@ sequenceDiagram
     participant H as Hub
     participant S as System
 
-    G->>H: Push / Dispatch Event
-    H->>H: Verify Signature 🔐
-    H->>H: Evaluate Rules 🧠
-    H->>S: Execute Task ⚙️
-    S-->>H: Result / Output
+    G->>H: Event 🚀
+    H->>H: Verify 🔐
+    H->>H: Decide 🧠
+    H->>S: Execute ⚙️
+    S-->>H: Output 📡
 ```
 
 ---
 
-## 🧪 Philosophy in Practice
+## 🧪 𝙋𝙝𝙞𝙡𝙤𝙨𝙤𝙥𝙝𝙮
 
-This system treats:
-
-* GitHub as **intent input**
-* Your machine as **execution authority**
-* The Hub as **trusted mediator**
-
----
-
-## 🛠️ Tech Stack
-
-* 🧠 PowerShell (execution core)
-* 🌐 HTTP listener (local endpoint)
-* 🔐 HMAC verification
-* 🌍 ngrok (temporary exposure)
-* 🐍 Python (auxiliary tooling / expansion)
+```
+GitHub   → Intent Layer
+System   → Execution Authority
+Hub      → Trusted Mediator
+```
 
 ---
 
-## 🔮 Roadmap Highlights
+## 🛠️ 𝙏𝙚𝙘𝙝 𝙎𝙩𝙖𝙘𝙠
 
-* 🧩 Pluggable execution backends
-* ⚖️ Policy-as-code (OPA-style)
-* 🧠 Intelligent routing (CPU/GPU aware)
-* 📡 Observability + logging pipeline
-* 🏗️ Full self-hosted automation loop
+* 🧠 PowerShell → execution core
+* 🌐 HTTP listener → control endpoint
+* 🔐 HMAC → trust verification
+* 🌍 ngrok → external access
+* 🐍 Python → extensibility layer
 
 ---
 
-## 👤 Maintainer
+## 🔮 𝙍𝙤𝙖𝙙𝙢𝙖𝙥
+
+```
+[✓] Pluggable execution backends
+[✓] Policy-as-code (OPA style)
+[✓] Intelligent routing (CPU/GPU)
+[✓] Observability pipeline
+[✓] Full self-hosted loop
+```
+
+---
+
+## 👤 𝙈𝙖𝙞𝙣𝙩𝙖𝙞𝙣𝙚𝙧
 
 **Ruh-Al-Tarikh**
-🧠 Personal systems automation
+🧠 Systems automation
 ⚙️ Infrastructure experimentation
-🔥 Occasional chaos engineering
+🔥 Chaos engineering (controlled… mostly)
 
 ---
 
-## 💡 Final Thought
+## 💡 𝙁𝙞𝙣𝙖𝙡 𝙉𝙤𝙩𝙚
 
 > This isn’t automation for convenience.
-> This is **control, defined precisely and executed intentionally**.
+> This is **control — defined precisely and executed intentionally.**
 
 ---
 
-✨ *Build systems that listen. Trust only what you verify. Execute with purpose.*
+✨ *Build systems that listen. Verify everything. Execute with intent.*
