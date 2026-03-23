@@ -1,37 +1,26 @@
-name: Download TLS Certificate
+name: Download Certificate
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      certUrl:
+        description: 'URL of the certificate to download'
+        required: true
+      certName:
+        description: 'Name for the downloaded certificate'
+        required: true
 
 jobs:
-  download-cert:
-    runs-on: windows-latest
+  download:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Download certificate
-        shell: pwsh
+      - name: Download Certificate
         run: |
-          $certPath = ".\bin\checkScripts\download_ca_cert.pem"
-          if (Test-Path $certPath) {
-              $timestamp = Get-Date -Format yyyyMMddHHmmss
-              Rename-Item $certPath "$certPath.$timestamp.bak"
-              Write-Host "Existing certificate backed up."
-          }
-          node .\bin\checkScripts\runDownloadCert.js github.com
-          if (Test-Path $certPath) {
-              Write-Host "::notice title=Download TLS Certificate [Run #$($env:GITHUB_RUN_NUMBER)]::Certificate downloaded and verified successfully."
-          } else {
-              Write-Host "::error title=Download TLS Certificate [Run #$($env:GITHUB_RUN_NUMBER)]::Failed to download certificate."
-              throw "Failed to download certificate."
-          }
+          curl -L "${{ github.event.inputs.certUrl }}" -o "${{ github.event.inputs.certName }}"
+          echo "Certificate downloaded: ${{ github.event.inputs.certName }}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.certName }}
+          path: ${{ github.event.inputs.certName }}
