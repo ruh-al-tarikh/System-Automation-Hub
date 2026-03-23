@@ -1,4 +1,5 @@
-﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "")]
+param()
 # Workflow folder
 $workflowDir = ".github\workflows"
 if (-not (Test-Path $workflowDir)) {

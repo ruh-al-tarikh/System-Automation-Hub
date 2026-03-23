@@ -1,4 +1,7 @@
-﻿# Hardcoded GitHub Personal Access Token (with repo/workflows scope)
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "")]
+param()
+
+# Hardcoded GitHub Personal Access Token (with repo/workflows scope)
 $token = $env:GITHUB_TOKEN
 
 # GitHub repo info
@@ -7,9 +10,18 @@ $repo  = "System-Automation-Hub"
 
 # Get list of workflow files
 $workflowDir = ".github/workflows"
-$workflows = Get-ChildItem $workflowDir -Filter *.yml | Select-Object -ExpandProperty Name
+if (Test-Path $workflowDir) {
+    $workflows = Get-ChildItem $workflowDir -Filter *.yml | Select-Object -ExpandProperty Name
+} else {
+    $workflows = @()
+}
 
 Write-Host "Available workflows to run:"
+if ($workflows.Count -eq 0) {
+    Write-Host "No workflows found in $workflowDir" -ForegroundColor Yellow
+    return
+}
+
 $workflows | ForEach-Object { Write-Host "- $_" }
 
 # Prompt user to choose workflow
@@ -27,9 +39,6 @@ if ($answer -ne 'Y') {
     return
 }
 
-# Use token directly
-$token = $env:GITHUB_TOKEN
-
 # GitHub API endpoint
 $uri = "https://api.github.com/repos/$owner/$repo/actions/workflows/$workflowFile/dispatches"
 
@@ -44,7 +53,10 @@ $headers = @{
 $body = @{ ref = "main" } | ConvertTo-Json
 
 # Trigger the workflow
-Invoke-RestMethod -Uri $uri -Headers $headers -Method Post -Body $body
-
-Write-Host "Workflow '$workflowFile' dispatched successfully!"
-Write-Host "Check https://github.com/$owner/$repo/actions for status."
+try {
+    Invoke-RestMethod -Uri $uri -Headers $headers -Method Post -Body $body
+    Write-Host "Workflow '$workflowFile' dispatched successfully!"
+    Write-Host "Check https://github.com/$owner/$repo/actions for status."
+} catch {
+    Write-Host "Error triggering workflow: $($_.Exception.Message)" -ForegroundColor Red
+}

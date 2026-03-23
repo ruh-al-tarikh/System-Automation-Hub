@@ -1,15 +1,15 @@
-﻿# =============================================
-# System Automation Hub Launcher
-# =============================================
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "")]
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingWriteHost", "")]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseShouldProcessForStateChangingFunctions", "")]
 param()
+# =============================================
+# System Automation Hub Launcher
+# =============================================
 
 # --- Config ---
 $port = 9000
 $listenerScript = ".\webhooks\listener.ps1"
 
-# --- Function to start listener in a new window ---
+# --- Function to start listener ---
 function Start-Listener {
     Start-Process pwsh -ArgumentList "-NoExit -Command `"$listenerScript`""
     Write-Host "✅ Listener started on port $port"
