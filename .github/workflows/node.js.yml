@@ -18,18 +18,26 @@ jobs:
       # Checkout the repository
       - uses: actions/checkout@v4
 
-      # Setup Node.js and cache npm dependencies
+      # Setup Node.js
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+
+      # Cache node_modules and npm dependencies
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
 
       # Install dependencies cleanly
       - name: Install dependencies
         run: npm ci
 
-      # Build the project (if a build script exists)
+      # Build the project (if build script exists)
       - name: Build project
         run: npm run build --if-present
 
@@ -37,10 +45,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Optional check step (if you have a script named "check")
+      # Optional checks (if a check script exists)
       - name: Run checks
         run: npm run check || echo "No check script found, skipping."
 
-      # Feedback/logging step
+      # Feedback/logging
       - name: Feedback
         run: echo "✅ Node.js ${{ matrix.node-version }}: CI workflow completed successfully."
