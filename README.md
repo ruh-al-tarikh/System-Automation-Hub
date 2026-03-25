@@ -119,7 +119,7 @@ sequenceDiagram
     H->>H: Verify 🔐
     H->>H: Decide 🧠
     H->>S: Execute ⚙️
-    S-->>H: Output 📡
+    S->>H: Output 📡
 ```
 
 ---
